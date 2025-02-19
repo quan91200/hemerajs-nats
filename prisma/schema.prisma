@@ -1,0 +1,40 @@
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id                Int            @id @default(autoincrement())
+  email             String         @unique
+  password          String
+  posts             Post[] // Quan hệ 1-N với Post
+  userNotification  Notification[] @relation("UserNotification") // Quan hệ 1-N với Notification
+  sentNotifications Notification[] @relation("SenderNotification") // Quan hệ 1-N với Notification (dành cho người gửi)
+}
+
+model Post {
+  id        Int      @id @default(autoincrement())
+  title     String
+  content   String   @db.VarChar(255)
+  userId    Int
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+}
+
+model Notification {
+  id        String   @id @default(uuid())
+  userId    Int
+  senderId  Int?
+  type      String
+  message   String   @db.VarChar(255)
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user   User  @relation("UserNotification", fields: [userId], references: [id], onDelete: Cascade)
+  sender User? @relation("SenderNotification", fields: [senderId], references: [id], onDelete: Cascade)
+}
